@@ -1,0 +1,87 @@
+#!/usr/bin/env python3
+# -*- encoding: utf-8 -*-
+'''
+First, install the latest release of Python wrapper: $ pip install ovh
+'''
+import sys
+import os.path
+import ovh
+import json
+
+config_file = '~/.config/ovh-redirections.json'
+remote_db = 'redirections_ovh.json'
+
+def help():
+    print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
+    for f in globals().keys():
+        if not f.startswith('__') and callable(globals()[f]):
+            print('    {}'.format(f))
+    sys.exit(1)
+
+try:
+    f_config = open(os.path.expanduser(config_file), 'r')
+except:
+    print('No config file found {}\n'.format(config_file))
+    config = {}
+    config['endpoint'] = 'ovh-eu'
+    config['application_key'] = 'YourApplicationKey'
+    config['application_secret'] = 'YourApplicationSecret'
+    config['consumer_key'] = 'YourConsumerKey'
+    print('Configuration sample:\n')
+    print(json.dumps(config, indent=2))
+    sys.exit(1)
+
+config = json.load(f_config)
+
+# Instanciate an OVH Client.
+# You can generate new credentials with full access to your account on
+# the token creation page
+client = ovh.Client(
+    endpoint=config['endpoint'],
+    application_key=config['application_key'],
+    application_secret=config['application_secret'],
+    consumer_key=config['consumer_key'],
+)
+
+def update():
+    redirections_id_list = client.get('/email/domain/haum.org/redirection')
+    redirections = []
+    for r in redirections_id_list:
+        redirection = client.get('/email/domain/haum.org/redirection/%s' % r)
+        redirections.append(redirection)
+    f = open(remote_db, 'w')
+    f.write(json.dumps(redirections, indent=2, sort_keys=True))
+    print('Redirections written to "%s"' % remote_db)
+
+def list():
+    f = open(remote_db, 'r')
+    r_redirections = json.load(f)
+    for r in r_redirections:
+        print("{} -> {}".format(r['from'], r['to']))
+
+def list_as_group():
+    f = open(remote_db, 'r')
+    r_redirections = json.load(f)
+    # Build a dict
+    redirections_dict = {}
+    for r in r_redirections:
+        if r['from'] not in redirections_dict:
+            redirections_dict[r['from']] = []
+        redirections_dict[r['from']].append(r)
+    # Print redirections (grouped)
+    for key in redirections_dict.keys():
+        if len(redirections_dict[key]) == 1:
+            r = redirections_dict[key][0]
+            #print("{} -> {}".format(r['from'], r['to']))
+        else:
+            print(key)
+            for redirection in redirections_dict[key]:
+                print('  %s (%s)' % (redirection['to'], redirection['id']))
+
+if len(sys.argv) == 1:
+    help()
+else:
+    if sys.argv[1] in locals():
+        locals()[sys.argv[1]]()
+    else:
+        help()

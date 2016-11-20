@@ -8,9 +8,8 @@ import os.path
 import ovh
 import yaml
 
-import json
-config_file = '~/.config/ovh-redirections.json'
-remote_db = 'redirections_ovh.yaml'
+config_file = '~/.config/ovh-redirections.yaml'
+remote_db_suffix = '_remote-redirections.yaml'
 
 def help():
     print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
@@ -23,45 +22,55 @@ try:
     f_config = open(os.path.expanduser(config_file), 'r')
 except:
     print('No config file found {}\n'.format(config_file))
-    config = {}
-    config['endpoint'] = 'ovh-eu'
-    config['application_key'] = 'YourApplicationKey'
-    config['application_secret'] = 'YourApplicationSecret'
-    config['consumer_key'] = 'YourConsumerKey'
+    config = { 'example.com': { 'endpoint': 'ovh-eu', 'application_key': 'YourApplicationKey', 'application_secret': 'YourApplicationSecret', 'consumer_key': 'YourConsumerKey' } }
     print('Configuration sample:\n')
-    print(json.dumps(config, indent=2))
+    print(yaml.dump(config, indent=4, default_flow_style=False))
     sys.exit(1)
 
-config = json.load(f_config)
+configs = yaml.load(f_config)
 
-# Instanciate an OVH Client.
-# You can generate new credentials with full access to your account on
-# the token creation page
-client = ovh.Client(
-    endpoint=config['endpoint'],
-    application_key=config['application_key'],
-    application_secret=config['application_secret'],
-    consumer_key=config['consumer_key'],
-)
+if len(configs.keys()) == 1:
+    domain = list(configs.keys())[0]
+    print('Using "{}" domain configuration…'.format(domain))
+    config = configs[domain]
+    client = ovh.Client(
+        endpoint=config['endpoint'],
+        application_key=config['application_key'],
+        application_secret=config['application_secret'],
+        consumer_key=config['consumer_key'],
+    )
+else:
+    print('Multi-domain support are not yet implemented…')
+    sys.exit(1)
+remote_db = '{}{}'.format(domain, remote_db_suffix)
 
 def update():
-    redirections_id_list = client.get('/email/domain/haum.org/redirection')
+    redirections_id_list = client.get('/email/domain/{}/redirection'.format(domain))
     redirections = []
     for r in redirections_id_list:
-        redirection = client.get('/email/domain/haum.org/redirection/%s' % r)
+        redirection = client.get('/email/domain/{}/redirection/{}'.format(domain, r))
         redirections.append(redirection)
     f = open(remote_db, 'w')
     yaml.dump(redirections, f, indent=2)
-    print('Redirections written to "%s"' % remote_db)
+    print('Redirections written to "{}"'.format(remote_db))
+
+def _open_remote_db():
+    try:
+        f = open(remote_db, 'r')
+    except Exception as e:
+        print(str(e))
+        print("Maybe you missed to run '{} update' before ?".format(sys.argv[0]))
+        sys.exit(1)
+    return f
 
 def list():
-    f = open(remote_db, 'r')
+    f = _open_remote_db()
     r_redirections = yaml.load(f)
     for r in r_redirections:
         print("{} -> {}".format(r['from'], r['to']))
 
 def list_as_group():
-    f = open(remote_db, 'r')
+    f = _open_remote_db()
     r_redirections = yaml.load(f)
     # Build a dict
     redirections_dict = {}

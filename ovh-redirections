@@ -9,12 +9,12 @@ import ovh
 import yaml
 
 config_file = '~/.config/ovh-redirections.yaml'
-remote_db_suffix = '_remote-redirections.yaml'
+remote_db_suffix = '_ovh-redirections.yaml'
 
 def help():
     print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
     for f in globals().keys():
-        if not f.startswith('__') and callable(globals()[f]):
+        if not f.startswith('_') and callable(globals()[f]):
             print('    {}'.format(f))
     sys.exit(1)
 
@@ -42,16 +42,30 @@ if len(configs.keys()) == 1:
 else:
     print('Multi-domain support are not yet implemented…')
     sys.exit(1)
-remote_db = '{}{}'.format(domain, remote_db_suffix)
+remote_db = '.{}{}'.format(domain, remote_db_suffix)
+
+def _group_redirections(redirections):
+    # Build a dict
+    redirections_dict = {}
+    for r in redirections:
+        r_from = r['from']
+        if r_from not in redirections_dict:
+            redirections_dict[r_from] = []
+        r.pop('from')
+        redirections_dict[r_from].append(r)
+    return redirections_dict
 
 def update():
     redirections_id_list = client.get('/email/domain/{}/redirection'.format(domain))
+    print('{} redirections found, fetching details…'.format(len(redirections_id_list)))
     redirections = []
     for r in redirections_id_list:
         redirection = client.get('/email/domain/{}/redirection/{}'.format(domain, r))
         redirections.append(redirection)
+
+    redirections_dict = _group_redirections(redirections)
     f = open(remote_db, 'w')
-    yaml.dump(redirections, f, indent=2)
+    yaml.dump(redirections_dict, f, indent=2, default_flow_style=False)
     print('Redirections written to "{}"'.format(remote_db))
 
 def _open_remote_db():
@@ -66,27 +80,12 @@ def _open_remote_db():
 def list():
     f = _open_remote_db()
     r_redirections = yaml.load(f)
-    for r in r_redirections:
-        print("{} -> {}".format(r['from'], r['to']))
-
-def list_as_group():
-    f = _open_remote_db()
-    r_redirections = yaml.load(f)
-    # Build a dict
-    redirections_dict = {}
-    for r in r_redirections:
-        if r['from'] not in redirections_dict:
-            redirections_dict[r['from']] = []
-        redirections_dict[r['from']].append(r)
     # Print redirections (grouped)
-    for key in redirections_dict.keys():
-        if len(redirections_dict[key]) == 1:
-            r = redirections_dict[key][0]
-            #print("{} -> {}".format(r['from'], r['to']))
-        else:
-            print(key)
-            for redirection in redirections_dict[key]:
-                print('  %s (%s)' % (redirection['to'], redirection['id']))
+    for key in sorted(r_redirections.keys()):
+        print(key)
+        for redirection in r_redirections[key]:
+            print('  %s (%s)' % (redirection['to'], redirection['id']))
+        print()
 
 if len(sys.argv) == 1:
     help()

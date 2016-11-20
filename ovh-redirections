@@ -9,7 +9,7 @@ import ovh
 import yaml
 
 config_file = '~/.config/ovh-redirections.yaml'
-remote_db_suffix = '_ovh-redirections.yaml'
+domain_db_suffix = '_ovh-redirections.yaml'
 
 def help():
     print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
@@ -42,7 +42,8 @@ if len(configs.keys()) == 1:
 else:
     print('Multi-domain support are not yet implemented…')
     sys.exit(1)
-remote_db = '.{}{}'.format(domain, remote_db_suffix)
+remote_db = '.{}{}'.format(domain, domain_db_suffix)
+local_db = '{}{}'.format(domain, domain_db_suffix)
 
 def _group_redirections(redirections):
     # Build a dict
@@ -64,13 +65,15 @@ def update():
         redirections.append(redirection)
 
     redirections_dict = _group_redirections(redirections)
-    f = open(remote_db, 'w')
-    yaml.dump(redirections_dict, f, indent=2, default_flow_style=False)
-    print('Redirections written to "{}"'.format(remote_db))
+    f_r = open(remote_db, 'w')
+    yaml.dump(redirections_dict, f_r, indent=2, default_flow_style=False)
+    f_l = open(remote_db, 'w')
+    yaml.dump(redirections_dict, f_l, indent=2, default_flow_style=False)
+    print('Redirections written to "{}"'.format(local_db))
 
-def _open_remote_db():
+def _open_local_db():
     try:
-        f = open(remote_db, 'r')
+        f = open(local_db, 'r')
     except Exception as e:
         print(str(e))
         print("Maybe you missed to run '{} update' before ?".format(sys.argv[0]))
@@ -78,7 +81,7 @@ def _open_remote_db():
     return f
 
 def list():
-    f = _open_remote_db()
+    f = _open_local_db()
     r_redirections = yaml.load(f)
     # Print redirections (grouped)
     for key in sorted(r_redirections.keys()):
@@ -86,6 +89,42 @@ def list():
         for redirection in r_redirections[key]:
             print('  %s (%s)' % (redirection['to'], redirection['id']))
         print()
+
+def _print_flat_redirections(redirections, fmt='{}'):
+    for r in redirections:
+        out = '{} -> {} ({})'.format(r[1], r[2], r[0])
+        print(fmt.format(out))
+
+def _flat_redirections(redirections):
+    flat_redirections = []
+    for r_from in sorted(redirections.keys()):
+        if redirections[r_from]:
+            for redirection in redirections[r_from]:
+                r_id = redirection['id']
+                #flat_redirections.append({ 'id': r_id, 'from': r_from, 'to': redirection['to']})
+                flat_redirections.append( (r_id, r_from, redirection['to']) )
+    return flat_redirections
+
+def diff():
+    f_l = _open_local_db()
+    l_redirections = _flat_redirections(yaml.load(f_l))
+    f_r = open(remote_db, 'r')
+    r_redirections = _flat_redirections(yaml.load(f_r))
+
+    removed = set(r_redirections) - set(l_redirections)
+    added = set(l_redirections) - set(r_redirections)
+
+    if(len(removed)):
+        print('Removed:')
+        _print_flat_redirections(removed, fmt='\t\033[91m{}\033[00m')
+    else:
+        print('Nothing to remove.')
+
+    if(len(added)):
+        print('Added:')
+        _print_flat_redirections(added, fmt='\t\033[92m{}\033[00m')
+    else:
+        print('Nothing to add.')
 
 if len(sys.argv) == 1:
     help()

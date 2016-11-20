@@ -6,10 +6,11 @@ First, install the latest release of Python wrapper: $ pip install ovh
 import sys
 import os.path
 import ovh
-import json
+import yaml
 
+import json
 config_file = '~/.config/ovh-redirections.json'
-remote_db = 'redirections_ovh.json'
+remote_db = 'redirections_ovh.yaml'
 
 def help():
     print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
@@ -50,18 +51,18 @@ def update():
         redirection = client.get('/email/domain/haum.org/redirection/%s' % r)
         redirections.append(redirection)
     f = open(remote_db, 'w')
-    f.write(json.dumps(redirections, indent=2, sort_keys=True))
+    yaml.dump(redirections, f, indent=2)
     print('Redirections written to "%s"' % remote_db)
 
 def list():
     f = open(remote_db, 'r')
-    r_redirections = json.load(f)
+    r_redirections = yaml.load(f)
     for r in r_redirections:
         print("{} -> {}".format(r['from'], r['to']))
 
 def list_as_group():
     f = open(remote_db, 'r')
-    r_redirections = json.load(f)
+    r_redirections = yaml.load(f)
     # Build a dict
     redirections_dict = {}
     for r in r_redirections:

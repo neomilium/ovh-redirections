@@ -74,9 +74,9 @@ def fetch():
 def checkout():
     shutil.copyfile(remote_db, local_db)
 
-def _open_local_db():
+def _open_local_db(flag='r'):
     try:
-        f = open(local_db, 'r')
+        f = open(local_db, flag)
     except Exception as e:
         print(str(e))
         print("Maybe you missed to run '{} update' before ?".format(sys.argv[0]))

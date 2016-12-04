@@ -13,7 +13,7 @@ domain_db_suffix = '_ovh-redirections.yaml'
 
 def help():
     print('Usage: {} <command>\n\nCommands:'.format(sys.argv[0]))
-    for f in globals().keys():
+    for f in sorted(globals().keys()):
         if not f.startswith('_') and callable(globals()[f]):
             print('    {}'.format(f))
     sys.exit(1)

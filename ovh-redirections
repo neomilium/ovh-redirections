@@ -85,12 +85,16 @@ def _open_local_db():
 def list():
     f = _open_local_db()
     r_redirections = yaml.load(f)
+    _print_redirections(r_redirections)
+
+def _print_redirections(redirections):
     # Print redirections (grouped)
-    for key in sorted(r_redirections.keys()):
-        print(key)
-        for redirection in r_redirections[key]:
-            print('  %s (%s)' % (redirection['to'], redirection['id']))
-        print()
+    for r_from in sorted(redirections.keys()):
+        if redirections[r_from]:
+            print(r_from)
+            for redirection in redirections[r_from]:
+                print('  %s (%s)' % (redirection['to'], redirection['id']))
+            print()
 
 def _print_flat_redirections(redirections, fmt='{}'):
     for r in redirections:

@@ -5,6 +5,7 @@ First, install the latest release of Python wrapper: $ pip install ovh
 '''
 import sys
 import os.path
+import shutil
 import ovh
 import yaml
 
@@ -56,7 +57,7 @@ def _group_redirections(redirections):
         redirections_dict[r_from].append(r)
     return redirections_dict
 
-def update():
+def fetch():
     redirections_id_list = client.get('/email/domain/{}/redirection'.format(domain))
     print('{} redirections found, fetching details…'.format(len(redirections_id_list)))
     redirections = []
@@ -67,9 +68,10 @@ def update():
     redirections_dict = _group_redirections(redirections)
     f_r = open(remote_db, 'w')
     yaml.dump(redirections_dict, f_r, indent=2, default_flow_style=False)
-    f_l = open(remote_db, 'w')
-    yaml.dump(redirections_dict, f_l, indent=2, default_flow_style=False)
-    print('Redirections written to "{}"'.format(local_db))
+    print('Redirections written to "{}"'.format(remote_db))
+
+def checkout():
+    shutil.copyfile(remote_db, local_db)
 
 def _open_local_db():
     try:

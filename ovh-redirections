@@ -99,7 +99,10 @@ def _print_redirections(redirections):
 
 def _print_flat_redirections(redirections, fmt='{}'):
     for r in redirections:
-        out = '{} -> {} ({})'.format(r[1], r[2], r[0])
+        if r[0]:
+            out = '{} -> {} ({})'.format(r[1], r[2], r[0])
+        else:
+            out = '{} -> {}'.format(r[1], r[2])
         print(fmt.format(out))
 
 def _flat_redirections(redirections):
@@ -107,8 +110,10 @@ def _flat_redirections(redirections):
     for r_from in sorted(redirections.keys()):
         if redirections[r_from]:
             for redirection in redirections[r_from]:
-                r_id = redirection['id']
-                #flat_redirections.append({ 'id': r_id, 'from': r_from, 'to': redirection['to']})
+                try:
+                    r_id = redirection['id']
+                except:
+                    r_id = None
                 flat_redirections.append( (r_id, r_from, redirection['to']) )
     return flat_redirections
 

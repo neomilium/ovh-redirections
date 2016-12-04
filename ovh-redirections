@@ -79,7 +79,7 @@ def _open_local_db(flag='r'):
         f = open(local_db, flag)
     except Exception as e:
         print(str(e))
-        print("Maybe you missed to run '{} update' before ?".format(sys.argv[0]))
+        print("Maybe you missed to run '{} checkout' before ?".format(sys.argv[0]))
         sys.exit(1)
     return f
 

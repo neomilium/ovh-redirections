@@ -1,0 +1,5 @@
+example.com:
+    application_key: YourApplicationKey
+    application_secret: YourApplicationSecret
+    consumer_key: YourConsumerKey
+    endpoint: ovh-eu

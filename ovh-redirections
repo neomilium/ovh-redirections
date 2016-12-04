@@ -8,6 +8,7 @@ import os.path
 import shutil
 import ovh
 import yaml
+import json
 
 config_file = '~/.config/ovh-redirections.yaml'
 domain_db_suffix = '_ovh-redirections.yaml'
@@ -136,6 +137,46 @@ def diff():
     else:
         print('No changes.')
 
+def _add_redirection(r_from, r_to):
+    print('Adding redirection: {} -> {}'.format(r_from, r_to), end='')
+    try:
+        result = client.post(url_base,
+            _from=r_from,      # Required: Name of redirection (type: string)
+            localCopy=False,  # Required: If true keep a local copy (type: boolean)
+            to=r_to,          # Required: Target of account (type: string)
+        )
+        #print(json.dumps(result, indent=4))
+        print('\t\033[92m{}\033[00m'.format('OK'))
+        return result['id']
+    except Exception as e:
+        print(' \t\033[91m{}\033[00m'.format('ERR: '+str(e)))
+    return None
+
+def _del_redirection(r_id):
+    print('Deleting redirection: {}'.format(r_id), end='')
+    try:
+        result = client.delete(url_base+'/{}'.format(r_id))
+        #print(json.dumps(result, indent=4))
+        print('\t\033[92m{}\033[00m'.format('OK'))
+    except Exception as e:
+        print(' \t\033[91m{}\033[00m'.format('ERR: '+str(e)))
+
+def commit():
+    f_l = _open_local_db()
+    l_redirections = _flat_redirections(yaml.load(f_l))
+    f_r = open(remote_db, 'r')
+    r_redirections = _flat_redirections(yaml.load(f_r))
+
+    deleted = set(r_redirections) - set(l_redirections)
+    added = set(l_redirections) - set(r_redirections)
+
+    for r in deleted:
+        _del_redirection(r[0])
+
+    for r in added:
+        _add_redirection(r[1], r[2])
+
+    fetch()
 
 if len(sys.argv) == 1:
     help()

@@ -126,17 +126,16 @@ def diff():
     removed = set(r_redirections) - set(l_redirections)
     added = set(l_redirections) - set(r_redirections)
 
-    if(len(removed)):
-        print('Removed:')
-        _print_flat_redirections(removed, fmt='\t\033[91m{}\033[00m')
+    if(len(removed) or len(added)):
+        if len(removed):
+            print()
+            _print_flat_redirections(removed, fmt='\t\033[91mdeleted: \t{}\033[00m')
+        if(len(added)):
+            print()
+            _print_flat_redirections(added, fmt='\t\033[92madded: \t\t{}\033[00m')
     else:
-        print('Nothing to remove.')
+        print('No changes.')
 
-    if(len(added)):
-        print('Added:')
-        _print_flat_redirections(added, fmt='\t\033[92m{}\033[00m')
-    else:
-        print('Nothing to add.')
 
 if len(sys.argv) == 1:
     help()

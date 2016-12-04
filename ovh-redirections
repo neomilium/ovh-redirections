@@ -45,6 +45,7 @@ else:
     sys.exit(1)
 remote_db = '.{}{}'.format(domain, domain_db_suffix)
 local_db = '{}{}'.format(domain, domain_db_suffix)
+url_base = '/email/domain/{}/redirection'.format(domain)
 
 def _group_redirections(redirections):
     # Build a dict
@@ -58,11 +59,11 @@ def _group_redirections(redirections):
     return redirections_dict
 
 def fetch():
-    redirections_id_list = client.get('/email/domain/{}/redirection'.format(domain))
+    redirections_id_list = client.get(url_base)
     print('{} redirections found, fetching details…'.format(len(redirections_id_list)))
     redirections = []
-    for r in redirections_id_list:
-        redirection = client.get('/email/domain/{}/redirection/{}'.format(domain, r))
+    for r_id in redirections_id_list:
+        redirection = client.get(url_base + '/{}'.format(r_id))
         redirections.append(redirection)
 
     redirections_dict = _group_redirections(redirections)

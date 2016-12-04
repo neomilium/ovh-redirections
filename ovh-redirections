@@ -71,6 +71,28 @@ def fetch():
     f_r = open(remote_db, 'w')
     yaml.dump(redirections_dict, f_r, indent=2, default_flow_style=False)
     print('Redirections written to "{}"'.format(remote_db))
+    _update_local_ids()
+
+def _update_local_ids():
+    f_l = _open_local_db()
+    l_redirections_dict = yaml.load(f_l)
+    l_redirections = _flat_redirections(l_redirections_dict)
+    f_r = open(remote_db, 'r')
+    r_redirections = _flat_redirections(yaml.load(f_r))
+
+    r_l = set(r_redirections) - set(l_redirections)
+    l_r = set(l_redirections) - set(r_redirections)
+
+    for a in r_l:
+        for b in l_r:
+            if a[1] == b[1] and a[2] == b[2]:
+                for r in l_redirections_dict[a[1]]:
+                    if r['to'] == a[2]:
+                        r['id'] = a[0]
+                        break
+
+    f_l = _open_local_db('w')
+    yaml.dump(l_redirections_dict, f_l, indent=2, default_flow_style=False)
 
 def checkout():
     shutil.copyfile(remote_db, local_db)

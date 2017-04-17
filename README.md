@@ -32,17 +32,18 @@ vim ~/.config/ovh-redirections.yaml
 
 ### Fetch
 
-Fetch redirections list with details, sort and group them then write them to a file.
+Fetch redirections list with details, sort and group them then write them to an
+hidden file `.example.com_ovh-redirections.yaml`. *This file should not be
+edited*
 
 ```
 ./ovh-redirections fetch
 ```
 
-*This file should not be edited*
-
 ### Checkout
 
-Copy previously fetched redirections file to a editable file named *example.com_ovh-redirections.yaml*
+Copy previously fetched redirections file to a editable file named
+`example.com_ovh-redirections.yaml`.
 
 ```
 ./ovh-redirections checkout

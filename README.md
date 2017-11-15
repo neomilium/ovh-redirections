@@ -27,6 +27,10 @@ pip install ovh pyyaml
 
 Grab application key and application secret from:
 
+https://api.ovh.com/createApp
+
+Note: `ovh-redirections` will request a consumer key itself, if you want to manage permissions yourself, use:
+
 https://api.ovh.com/createToken
 
 ### Set credentials

@@ -23,10 +23,20 @@ pip install ovh pyyaml
 
 ## Configuration
 
+### Create OVH token
+
+Grab application key and application secret from:
+
+https://api.ovh.com/createToken
+
+### Set credentials
+
 ```
 cp ovh-redirections.yaml.sample ~/.config/ovh-redirections.yaml
 vim ~/.config/ovh-redirections.yaml
 ```
+
+Note: you must set domain, endpoint, application key and application secret. If you don't have consumer key `ovh-redirections` will request it from OVH.
 
 ## Quick start
 
@@ -70,3 +80,7 @@ Apply added / deleted redirections online.
 ```
 ./ovh-redirections commit
 ```
+
+## Other useful related applications
+
+https://github.com/ovh/ovh-cli

@@ -13,7 +13,7 @@ import json
 config_file = '~/.config/ovh-redirections.yaml'
 domain_db_suffix = '_ovh-redirections.yaml'
 
-def _request_consumer_key(application_key, application_secret, endpoint):
+def _request_consumer_key(domain, application_key, application_secret, endpoint):
     client = ovh.Client(
         endpoint=endpoint,
         application_key=application_key,
@@ -21,7 +21,7 @@ def _request_consumer_key(application_key, application_secret, endpoint):
     )
 
     ck = client.new_consumer_key_request()
-    ck.add_recursive_rules(ovh.API_READ_WRITE, "/email/domain")
+    ck.add_recursive_rules(ovh.API_READ_WRITE, '/email/domain/{}'.format(domain))
 
     validation = ck.request()
 
@@ -59,7 +59,7 @@ if len(configs.keys()) == 1:
         consumer_key=config['consumer_key']
     except:
         print('No consumer key, running setup')
-        consumer_key=_request_consumer_key(application_key, application_secret, endpoint)
+        consumer_key=_request_consumer_key(domain, application_key, application_secret, endpoint)
         print('Please fill your configuration file ({}) with your newly created consumer key: {}'.format(config_file, consumer_key))
         exit(0)
 

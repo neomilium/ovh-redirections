@@ -46,7 +46,7 @@ except:
     print(yaml.dump(config, indent=4, default_flow_style=False))
     sys.exit(1)
 
-configs = yaml.load(f_config)
+configs = yaml.safe_load(f_config)
 
 if len(configs.keys()) == 1:
     domain = list(configs.keys())[0]
@@ -110,12 +110,12 @@ def _update_local_ids():
     f_l = _open_local_db()
 
     # Local redirections
-    l_redirections_dict = yaml.load(f_l)
+    l_redirections_dict = yaml.safe_load(f_l)
     l_redirections = _flat_redirections(l_redirections_dict)
 
     # Remote redirections
     f_r = open(remote_db, 'r')
-    r_redirections = _flat_redirections(yaml.load(f_r))
+    r_redirections = _flat_redirections(yaml.safe_load(f_r))
 
     # Compute differences between local and remote redirections
     r_l = set(r_redirections) - set(l_redirections)
@@ -146,7 +146,7 @@ def _open_local_db(flag='r'):
 
 def list():
     f = _open_local_db()
-    r_redirections = yaml.load(f)
+    r_redirections = yaml.safe_load(f)
     _print_redirections(r_redirections)
 
 def _print_redirections(redirections):
@@ -180,9 +180,9 @@ def _flat_redirections(redirections):
 
 def diff():
     f_l = _open_local_db()
-    l_redirections = _flat_redirections(yaml.load(f_l))
+    l_redirections = _flat_redirections(yaml.safe_load(f_l))
     f_r = open(remote_db, 'r')
-    r_redirections = _flat_redirections(yaml.load(f_r))
+    r_redirections = _flat_redirections(yaml.safe_load(f_r))
 
     removed = set(r_redirections) - set(l_redirections)
     added = set(l_redirections) - set(r_redirections)
@@ -223,9 +223,9 @@ def _del_redirection(r_id):
 
 def commit():
     f_l = _open_local_db()
-    l_redirections = _flat_redirections(yaml.load(f_l))
+    l_redirections = _flat_redirections(yaml.safe_load(f_l))
     f_r = open(remote_db, 'r')
-    r_redirections = _flat_redirections(yaml.load(f_r))
+    r_redirections = _flat_redirections(yaml.safe_load(f_r))
 
     deleted = set(r_redirections) - set(l_redirections)
     added = set(l_redirections) - set(r_redirections)
